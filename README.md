@@ -10,4 +10,4 @@ Here are some lightweight userscripts (code lines < 1024) written by myself. If 
 
 All the scripts are under [MIT License](https://github.com/andywang425/UserScripts/blob/master/LICENSE).
 
-[zhihuishu-liveclasshelper-raw]: https://raw.githubusercontent.com/andywang425/UserScripts/master/Zhihuishu-LiveClassHelper/Zhihuishu-LiveClassHelper.user.js
+[zhihuishu-liveclasshelper-raw]: https://github.com/andywang425/UserScripts/raw/master/Zhihuishu-LiveClassHelper/Zhihuishu-LiveClassHelper.user.js
