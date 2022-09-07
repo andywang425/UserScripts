@@ -10,8 +10,8 @@
 // @license      MIT
 // @run-at       document-start
 // @require      https://greasyfork.org/scripts/450907-ajax-hook-userscript/code/Ajax-hook-userscript.js?version=1090727
-// @updateURL    https://raw.githubusercontent.com/andywang425/UserScripts/master/Zhihuishu-LiveClassHelper.user.js
-// @downloadURL  https://raw.githubusercontent.com/andywang425/UserScripts/master/Zhihuishu-LiveClassHelper.user.js
+// @updateURL    https://github.com/andywang425/UserScripts/raw/master/Zhihuishu-LiveClassHelper/Zhihuishu-LiveClassHelper.user.js
+// @downloadURL  https://github.com/andywang425/UserScripts/raw/master/Zhihuishu-LiveClassHelper/Zhihuishu-LiveClassHelper.user.js
 // @supportURL   https://github.com/andywang425/UserScripts/issues
 // @grant        GM_xmlhttpRequest
 // @grant        GM_log
