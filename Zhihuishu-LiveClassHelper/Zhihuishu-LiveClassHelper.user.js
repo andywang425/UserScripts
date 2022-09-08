@@ -9,12 +9,13 @@
 // @icon         data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAACXBIWXMAAA7EAAAOxAGVKw4bAAABw0lEQVQokY1SPW8TQRB9d74v5zAXYzg5QVhIhCb8BX4S4hdASkCiokUUNCkpoKGhhW0iQbDcge5spPgiEtu77J59vt0dilhCiYngVaN572lGMw9ElOc5Y0wIQZdACMEYy/OciJwsy9rtdpIk+Bc459Pp1C2K4n/UAJIkKYoCf93k1ZfX+4dP1/tSSrfVap0f/JHqqarGYzlRlf08OkfGceyeVZYwr0FE+PawOn67HafXm72DTD1+B2sNbAnYM+XKwEv97D1GxYkN75LjRI2w6W8YYDddqtl3DB9QOf5jGM4Gcz39MMDodK4bHcdpaDLGatdxWuGyVkNUb/Tslzrsrwz7X5/8lLx3A7quUAnHlL7re66/0JgoaGuBe1ZOfjzaWxkC98pGEN7eRLd7y7t53wTbZa3KWnZi6nWCINqEf8dpXnXjEACI6FQea2NOhF5qIjuva/Xy4PmLT3uLeinnZHSlq7E1Wh4dEZEH4FqcAuiszht5Hnbau7UpQ88PPQABGl0A8dYWAEcIcfEVQKUXRBT5zQt9pZQ7GAzWUxB60boaQL/fd9M05Zyvc+vgnKdpCiLKsowxJqW8LN5SSsZYlmVE9BsXolKUnSzdUQAAAABJRU5ErkJggg==
 // @license      MIT
 // @run-at       document-start
-// @require      https://greasyfork.org/scripts/450907-ajax-hook-userscript/code/Ajax-hook-userscript.js?version=1090727
+// @require      https://greasyfork.org/scripts/450907-ajax-hook-userscript/code/Ajax-hook-userscript.js?version=1090926
 // @updateURL    https://github.com/andywang425/UserScripts/raw/master/Zhihuishu-LiveClassHelper/Zhihuishu-LiveClassHelper.user.js
 // @downloadURL  https://github.com/andywang425/UserScripts/raw/master/Zhihuishu-LiveClassHelper/Zhihuishu-LiveClassHelper.user.js
 // @supportURL   https://github.com/andywang425/UserScripts/issues
 // @grant        GM_xmlhttpRequest
 // @grant        GM_log
+// @grant        unsafeWindow
 // ==/UserScript==
 
 (function () {
@@ -34,13 +35,16 @@
                 const res = JSON.parse(response.response);
                 const checkStatus = res.rt.checkStatus;
                 const checkId = res.rt.checkId;
-                const checkType = res.t.checkType;
+                const checkType = res.rt.checkType;
                 const checkGesture = res.rt.checkGesture ?? '';
-                const latitude = res.t.latitude ?? '';
-                const longitude = res.t.longitude ?? '';
+                const latitude = res.rt.latitude ?? '';
+                const longitude = res.rt.longitude ?? '';
                 mylog('checkStatus', checkStatus);
                 if (checkStatus === 3) {
-                    if (checkIdList.includes(checkId)) return mylog('已尝试过签到，不签到', checkId);
+                    if (checkIdList.includes(checkId)) {
+                        mylog('已尝试过签到，不签到', checkId);
+                        return handler.next(response);
+                    }
                     mylog('WAIT FOR CHECK', checkId);
                     await sleep(randomIn(1000, 3000));
                     const req_data = `checkId=${checkId}&checkType=${checkType}&longitude=${longitude}&latitude=${latitude}&checkGesture=${checkGesture}&uuid=${user_info.uuid}&uid=${user_info.userId}&dateFormate=${String(Date.now()).slice(0, 10).concat('000')}`;
@@ -62,12 +66,12 @@
                     });
                     mylog("已完成签到，点击返回按钮", res.response);
                     let returnBtn = document.querySelector('.right-top');
-                    returnBtn.click();
+                    returnBtn?.click();
                 }
             } else {
                 //mylog('other response', response);
-                handler.next(response);
             }
+            handler.next(response);
         }
     });
     /**
