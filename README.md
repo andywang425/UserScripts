@@ -5,7 +5,7 @@ Here are some lightweight userscripts (code lines < 1024) written by myself. If 
 |       Name       |                Introduction                |                 Install                  |
 | :--------------: | :----------------------------------------: | :--------------------------------------: |
 | 智慧树直播课助手 | [README](Zhihuishu-LiveClassHelper#readme) | [INSTALL][zhihuishu-liveclasshelper-raw] |
-| 原神玩家指示器+  |     [README](MarkGenShinPlayer#readme)     |     [INSTALL][markgenshinplayer-raw]     |
+| 原神玩家指示器plus  |     [README](MarkGenShinPlayer#readme)     |     [INSTALL][markgenshinplayer-raw]     |
 
 ## License
 

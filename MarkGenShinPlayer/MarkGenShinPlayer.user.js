@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         原神玩家指示器+
+// @name         原神玩家指示器plus
 // @namespace    https://github.com/andywang425
 // @version      0.1
 // @description  自动标注评论区中的原神玩家，依据是评论者动态/视频里是否有原神相关内容
