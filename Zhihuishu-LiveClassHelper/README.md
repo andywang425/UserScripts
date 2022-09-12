@@ -10,3 +10,7 @@
   - 支持手势签到。位置签到也试着兼容了一下，但由于我没遇到过所以不知道是否有效。
 
 - 其他功能我也想做，比如防溜号什么的，但我的老师几乎不用，没机会抓包分析。
+
+## GitHub 项目地址
+
+https://github.com/andywang425/UserScripts/tree/master/Zhihuishu-LiveClassHelper

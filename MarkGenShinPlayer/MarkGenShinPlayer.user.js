@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         原神玩家指示器plus
 // @namespace    https://github.com/andywang425
-// @version      0.1
+// @version      0.2
 // @description  自动标注评论区中的原神玩家，依据是评论者动态/视频里是否有原神相关内容
 // @author       andywang425
 // @match        *://www.bilibili.com/video/*
@@ -34,15 +34,16 @@
         attributes: true,
         subtree: true
     }
-    let targetSet = new Set();;
+    let targetSet = new Set();
+    let uidSet = new Set();
     let commentObserver = new MutationObserver(async function (mutationsList, observer) {
         for (const mutation of mutationsList) {
             if (targetSet.has(mutation.target)) continue;
-            const userInfoElementObj = getUserInfoElement(mutation);
-            if (!userInfoElementObj || (userInfoElementObj.main.length === 0 && userInfoElementObj.sub.length === 0)) continue;
-            const userNameElementObj = getUserNameElement(userInfoElementObj);
-            const uidObj = getUserId(userNameElementObj);
-            await checkGenshin(userInfoElementObj, uidObj, mutation);
+            const userInfoElement = getUserInfoElement(mutation);
+            if (!userInfoElement || (userInfoElement.main.length === 0 && userInfoElement.sub.length === 0)) continue;
+            const userNameElement = getUserNameElement(userInfoElement);
+            const uid = getUserId(userNameElement);
+            await checkGenshin(userInfoElement, uid, mutation);
         }
     })
 
@@ -66,19 +67,22 @@
         })
     }
 
-    const checkGenshin = async (userInfoElementObj, uidObj, mutation) => {
-        for (const type in uidObj) {
-            for (let i = 0; i < uidObj[type].length; i++) {
-                const isGenshin = await limitHasGenshin(uidObj[type][i]);
+    const checkGenshin = async (userInfoElement, uid, mutation) => {
+        for (const type in uid) {
+            for (let i = 0; i < uid[type].length; i++) {
+                const isGenshin = uidSet.has(uid) || await limitHasGenshin(uid[type][i]);
                 if (isGenshin) {
                     targetSet.add(mutation.target);
-                    setGenshinIcon(userInfoElementObj[type][i]);
+                    uidSet.add(uid);
+                    setGenshinIcon(userInfoElement[type][i]);
                 }
             }
         }
     }
 
     const setGenshinIcon = (userInfoElement) => {
+        if (userInfoElement.lastChild?.className === 'genshin-icon')
+            return;
         const icon = document.createElement('div');
         icon.setAttribute('class', 'genshin-icon');
         icon.textContent = '原友';
@@ -87,7 +91,7 @@
 
     const getUserInfoElement = (mutation) => {
         const className = mutation.target.getAttribute('class');
-        if (className === 'reply-item') {
+        if (['reply-item', 'sub-reply-item'].includes(className)) {
             return {
                 main: [...mutation.target.querySelectorAll('.user-info')],
                 sub: [...mutation.target.querySelectorAll('.sub-user-info')]
@@ -95,17 +99,17 @@
         }
     }
 
-    const getUserNameElement = (userInfoElementObj) => {
+    const getUserNameElement = (userInfoElement) => {
         return {
-            main: userInfoElementObj.main.map(e => e.querySelector('.user-name')),
-            sub: userInfoElementObj.sub.map(e => e.querySelector('.sub-user-name'))
+            main: userInfoElement.main.map(e => e.querySelector('.user-name')),
+            sub: userInfoElement.sub.map(e => e.querySelector('.sub-user-name'))
         }
     }
 
-    const getUserId = (userInfoElementObj) => {
+    const getUserId = (userInfoElement) => {
         return {
-            main: userInfoElementObj.main.map(e => e.getAttribute('data-user-id')),
-            sub: userInfoElementObj.sub.map(e => e.getAttribute('data-user-id'))
+            main: userInfoElement.main.map(e => e.getAttribute('data-user-id')),
+            sub: userInfoElement.sub.map(e => e.getAttribute('data-user-id'))
         }
     }
 
