@@ -22,7 +22,7 @@
 
 ## 更新日志
 
-请查阅[CHANGELOG](ttps://github.com/andywang425/UserScripts/tree/master/MarkGenShinPlayer/CHANGELOG.md)。
+请查阅[CHANGELOG](https://github.com/andywang425/UserScripts/tree/master/MarkGenShinPlayer/CHANGELOG.md)。
 
 ## 作者的话
 
