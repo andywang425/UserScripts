@@ -2,7 +2,7 @@
 // @name         原神玩家指示器plus
 // @namespace    https://github.com/andywang425
 // @version      0.2
-// @description  自动标注评论区中的原神玩家，依据是评论者动态/视频里是否有原神相关内容
+// @description  自动标注B站评论区中的原神玩家，依据是评论者发布的动态/视频里是否有原神相关内容
 // @author       andywang425
 // @match        *://www.bilibili.com/video/*
 // @icon         https://static.hdslb.com/images/favicon.ico
