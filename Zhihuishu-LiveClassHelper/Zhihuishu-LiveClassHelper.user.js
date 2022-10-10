@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         智慧树直播课助手
 // @namespace    https://github.com/andywang425
-// @version      0.2
+// @version      0.2.1
 // @description  自动签到，投票
 // @author       andywang425
 // @match        *://hike-living.zhihuishu.com/*
@@ -32,11 +32,11 @@
     ah.proxy({
         onRequest: (config, handler) => {
             if (config.url.includes('//ctapp.zhihuishu.com/app-commonserv-classroomtools/commonChat/vote/chatVoteDetail')) {
+                handler.next(config);
                 let data = new URLSearchParams(config.body);
                 const voteId = data.get('voteId');
                 const groupId = data.get('groupId');
                 voteId2groupId[voteId] = groupId;
-                handler.next(config);
             } else {
                 //mylog('other request', config);
                 handler.next(config);
@@ -44,6 +44,7 @@
         },
         onResponse: async (response, handler) => {
             if (response.config.url.includes('//ctapp.zhihuishu.com/app-commonserv-classroomtools/commonChat/sign/chatCheckInfo')) {
+                handler.next(response);
                 mylog('chatCheckInfo', response);
                 const res = JSON.parse(response.response);
                 const checkStatus = res.rt.checkStatus;
@@ -53,7 +54,6 @@
                 const latitude = res.rt.latitude ?? '';
                 const longitude = res.rt.longitude ?? '';
                 mylog('checkStatus', checkStatus);
-                handler.next(response);
                 if (checkStatus === 3) {
                     if (checkIdList.includes(checkId)) {
                         mylog('已尝试过签到，不签到', checkId);
@@ -82,7 +82,10 @@
                     clickReturnBtn();
                 }
             } else if (response.config.url.includes('//ctapp.zhihuishu.com/app-commonserv-classroomtools/commonChat/vote/chatVoteDetail')) {
+                handler.next(response);
+                return;
                 mylog('chatVoteDetail', response);
+                const res = JSON.parse(response.response);
                 const voteStatus = res.rt.voteStatus;
                 const voteId = res.rt.voteId;
                 if (voteStatus === 2) {
@@ -94,12 +97,10 @@
                     return;
                 }
                 const DANGER_REMAINING_TIME = 10;
-                const res = JSON.parse(response.response);
                 const startTime = res.rt.startTime; // unix时间戳
                 const limitTime = res.rt.limitTime; // 秒
                 const remainingTime = res.rt.remainingTime; // 秒
                 const waitTime = remainingTime <= DANGER_REMAINING_TIME ? 0 : (startTime + limitTime * 1000 - Date.now() - 10 * 1000);
-                handler.next(response);
                 setTimeout(async () => {
                     let detailResponse = await GMR({
                         method: 'POST',
