@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         智慧树直播课助手
 // @namespace    https://github.com/andywang425
-// @version      0.2.1
+// @version      0.3.1
 // @description  自动签到，投票
 // @author       andywang425
 // @match        *://hike-living.zhihuishu.com/*
@@ -10,6 +10,7 @@
 // @license      MIT
 // @run-at       document-start
 // @require      https://greasyfork.org/scripts/450907-ajax-hook-userscript/code/Ajax-hook-userscript.js?version=1090926
+// @require      https://greasyfork.org/scripts/453803-hotkeys-js/code/hotkeys-js.js?version=1109849
 // @updateURL    https://github.com/andywang425/UserScripts/raw/master/Zhihuishu-LiveClassHelper/Zhihuishu-LiveClassHelper.user.js
 // @downloadURL  https://github.com/andywang425/UserScripts/raw/master/Zhihuishu-LiveClassHelper/Zhihuishu-LiveClassHelper.user.js
 // @supportURL   https://github.com/andywang425/UserScripts/issues
@@ -22,9 +23,9 @@
     // 已尝试过签到的checkId列表
     let checkIdList = [];
     // 已尝试过投票的voteId列表
-    let voteIdList = [];
+    // let voteIdList = [];
     // key: voteId, value: groupId
-    let voteId2groupId = {};
+    // let voteId2groupId = {};
     // 用户信息
     const user_info = JSON.parse(getCookieItem('CASLOGC'));
     mylog('CASLOGC', user_info);
@@ -81,93 +82,39 @@
                     mylog("已完成签到，点击返回按钮", res.response);
                     clickReturnBtn();
                 }
-            } else if (response.config.url.includes('//ctapp.zhihuishu.com/app-commonserv-classroomtools/commonChat/vote/chatVoteDetail')) {
-                handler.next(response);
-                return;
-                mylog('chatVoteDetail', response);
-                const res = JSON.parse(response.response);
-                const voteStatus = res.rt.voteStatus;
-                const voteId = res.rt.voteId;
-                if (voteStatus === 2) {
-                    mylog('投票已结束', voteId)
-                    return;
-                }
-                if (voteIdList.includes(voteId)) {
-                    mylog('已捕获到该投票，退出', checkId);
-                    return;
-                }
-                const DANGER_REMAINING_TIME = 10;
-                const startTime = res.rt.startTime; // unix时间戳
-                const limitTime = res.rt.limitTime; // 秒
-                const remainingTime = res.rt.remainingTime; // 秒
-                const waitTime = remainingTime <= DANGER_REMAINING_TIME ? 0 : (startTime + limitTime * 1000 - Date.now() - 10 * 1000);
-                setTimeout(async () => {
-                    let detailResponse = await GMR({
-                        method: 'POST',
-                        url: 'https://ctapp.zhihuishu.com/app-commonserv-classroomtools/commonChat/vote/chatVoteDetail',
-                        headers: {
-                            'Referer': 'https://hike-living.zhihuishu.com/',
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        },
-                        data: `voteId=${voteId}&groupId=${voteId2groupId[voteId]}&uuid=${user_info.uuid}&uid=${user_info.userId}&dateFormate=${dateFormate()}`,
-                        timeout: 10e3,
-                        responseType: 'json',
-                        onload: function (res) {
-                            mylog(`${voteId}获取投票细节结束`, res)
-                        }
-                    });
-                    const detailRes = detailResponse.response;
-                    const voteStatus = detailRes.rt.voteStatus;
-                    if (voteStatus === 2) {
-                        mylog('用户已投票，终止后续操作', voteId)
-                        return;
-                    }
-                    let countResponse = await GMR({
-                        method: 'POST',
-                        url: 'https://ctapp.zhihuishu.com/app-commonserv-classroomtools/commonChat/vote/chatVoteDetailOptionCount',
-                        headers: {
-                            'Referer': 'https://hike-living.zhihuishu.com/',
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        },
-                        data: `voteId=${voteId}&groupId=${voteId2groupId[voteId]}&uuid=${user_info.uuid}&uid=${user_info.userId}&dateFormate=${dateFormate()}`,
-                        timeout: 10e3,
-                        responseType: 'json',
-                        onload: function (res) {
-                            mylog(`${voteId}获取投票信息结束`, res)
-                        }
-                    });
-                    const countRes = countResponse.response;
-                    const voteOptions = countRes.rt.voteOptions;
-                    let maxIndex = 0;
-                    for (let i = 1; i < voteOptions.length; i++) {
-                        if (voteOptions[i].voteCount > voteOptions[maxIndex].voteCount)
-                            maxIndex = i;
-                    }
-                    const voteOptionId = voteOptions[maxIndex].optionId;
-                    let res = await GMR({
-                        method: 'POST',
-                        url: 'https://ctapp.zhihuishu.com/app-commonserv-classroomtools/commonChat/vote/chatTakeVote',
-                        headers: {
-                            'Referer': 'https://hike-living.zhihuishu.com/',
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        },
-                        data: `voteId=${voteId}&voteOptionId=${voteOptionId}&uuid=${user_info.uuid}&uid=${user_info.userId}&dateFormate=${dateFormate()}`,
-                        timeout: 10e3,
-                        responseType: 'json',
-                        onload: function (res) {
-                            mylog(`${voteId}参加投票结束`, res);
-                            voteIdList.push(voteId);
-                        }
-                    });
-                    mylog("已完成投票，点击返回按钮", res.response);
-                    clickReturnBtn();
-                }, waitTime);
             } else {
                 //mylog('other response', response);
             }
             handler.next(response);
         }
     });
+    // 绑定快捷键，复读弹幕
+    hotkeys('alt+shift+r', repeatLatestChat);
+    /**
+     * 复读最后一条弹幕
+     */
+    function repeatLatestChat() {
+        let chatList = document.querySelectorAll('.chat-text');
+        if (chatList.length === 0) return;
+        let latestChat = chatList[chatList.length - 1];
+        mylog('即将复读的内容', latestChat.innerHTML);
+        input(document.querySelector('textarea.uni-textarea-textarea'), latestChat.innerHTML)
+        document.querySelector('uni-button.send-btn').click();
+    }
+    /**
+     * 模拟输入
+     * @param {Element} dom 可以是textarea等
+     * @param {String} value 输入内容
+     */
+    function input(dom, value) {
+        var evt = new InputEvent('input', {
+            inputType: 'insertText',
+            dataTransfer: null,
+            isComposing: false
+        });
+        dom.value = value;
+        dom.dispatchEvent(evt);
+    }
     /**
      * 获取当前时间戳（精确到秒，最后三位为0）
      * @returns {string}
@@ -186,7 +133,7 @@
      * @param  {...any} args 
      */
     function mylog(...args) {
-        GM_log('[ZCHELPER]', ...args);
+        console.log('[ZCHELPER]', ...args);
     }
     /**
      * 获取Cookie值
@@ -204,11 +151,11 @@
     function GMR(config) {
         return new Promise(resolve => {
             if (typeof (config.data) === 'object' && !(config.data instanceof FormData) && !(config.data instanceof Blob)) {
-                let params = new URLSearchParams(config.data).toString();
+                let data = new URLSearchParams(config.data).toString();
                 if (config.method === 'GET') {
-                    config.url.concat('?', params);
+                    config.url.concat('?', data);
                 } else {
-                    config.data = params;
+                    config.data = data;
                 }
             }
             config._ontimeout = config.ontimeout ?? function () { };
